@@ -21,6 +21,7 @@ app.Run(async (HttpContext context) =>
                 {
                     await context.Response.WriteAsync($"Id: {todo.Id}\n");
                     await context.Response.WriteAsync($"Title: {todo.Title}\n");
+                    await context.Response.WriteAsync($"Edited: {todo.isEdited}");
                     await context.Response.WriteAsync($"created at: {todo.CurrentDateTime}\n");
                     await context.Response.WriteAsync($"--------------------\n");
                 }
@@ -64,6 +65,28 @@ static class TodoRepository
         }
     }
 
+    // Edit Todo
+    public static bool EditTodo(Todo? todo)
+    {
+        Todo td;
+        bool result;
+
+        td = todos.FirstOrDefault(t => t.Id == todo.Id);
+
+        if(td is not null)
+        {
+            td.Title = todo.Title;
+            td.Description = todo.Description;
+            td.CurrentDateTime = DateTime.Now;
+
+            result = true;
+        }else
+        {
+            result = false;
+        }
+        return result;
+    }
+
 }
 
 
@@ -72,9 +95,10 @@ public class Todo
 {
 
     public int Id { get; set; }
+
+    public bool isEdited { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
 
     public DateTime CurrentDateTime = DateTime.Now;
 }
-
