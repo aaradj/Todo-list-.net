@@ -9,13 +9,14 @@ app.Run(async (HttpContext context) =>
 
     if (context.Request.Path.StartsWithSegments("/"))
     {
-        if(context.Request.Method == "GET")
+        if (context.Request.Method == "GET")
         {
             var todos = TodoRepository.GetTodo();
             if (todos is null || todos.Count == 0)
             {
                 await context.Response.WriteAsync("there is no todo!");
-            }else
+            }
+            else
             {
                 foreach (var todo in todos)
                 {
@@ -27,24 +28,63 @@ app.Run(async (HttpContext context) =>
                 }
             }
         }
-        else if(context.Request.Method == "POST")
+        else if (context.Request.Method == "POST")
         {
             var body = await reader.ReadToEndAsync();
 
             var todo = JsonSerializer.Deserialize<Todo>(body);
 
-            if(todo is not null)
+            if (todo is not null)
             {
                 TodoRepository.CreateTodo(todo);
                 await context.Response.WriteAsync("todo created successfuly!");
-            }else
+            }
+            else
             {
                 await context.Response.WriteAsync("please field the input currectly!");
             }
         }
-    }
+        else if (context.Request.Method == "PUT")
+        {
+            var body = await reader.ReadToEndAsync();
+            var todo = JsonSerializer.Deserialize<Todo>(body);
 
+            if (todo is not null)
+            {
+                TodoRepository.EditTodo(todo);
+                await context.Response.WriteAsync("todo edited successfuly!");
+            }
+            else
+            {
+                await context.Response.WriteAsync("todo is not found!");
+            }
+        }
+        else if (context.Request.Method == "DELETE")
+        {
+            var body = await reader.ReadToEndAsync();
+
+            if (context.Request.Query.ContainsKey("id"))
+            {
+                var id = context.Request.Query["id"];
+
+                if (int.TryParse(id, out int todoId))
+                {
+                    var result = TodoRepository.DeleteTodo(todoId);
+                    if (result)
+                    {
+                        await context.Response.WriteAsync($"you removed ${todoId}");
+                    }
+                    else
+                    {
+                        await context.Response.WriteAsync("id is not found");
+                    }
+                }
+
+            }
+        }
+    }
 });
+
 
 app.Run();
 
@@ -83,6 +123,23 @@ static class TodoRepository
         }else
         {
             result = false;
+        }
+        return result;
+    }
+
+    // Delete Todo
+    public static bool DeleteTodo(int id)
+    {
+        bool result;
+        var todo = todos.FirstOrDefault(x=> x.Id == id);
+
+        if(todo is not null)
+        {
+            todos.Remove(todo);
+            result = true;
+        }else
+        {
+            result= false;
         }
         return result;
     }
