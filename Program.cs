@@ -37,10 +37,12 @@ app.Run(async (HttpContext context) =>
             if (todo is not null)
             {
                 TodoRepository.CreateTodo(todo);
+                context.Response.StatusCode = 201;
                 await context.Response.WriteAsync("todo created successfuly!");
             }
             else
             {
+                context.Response.StatusCode = 505;
                 await context.Response.WriteAsync("please field the input currectly!");
             }
         }
@@ -52,10 +54,12 @@ app.Run(async (HttpContext context) =>
             if (todo is not null)
             {
                 TodoRepository.EditTodo(todo);
+                context.Response.StatusCode = 202;
                 await context.Response.WriteAsync("todo edited successfuly!");
             }
             else
             {
+                context.Response.StatusCode = 505;
                 await context.Response.WriteAsync("todo is not found!");
             }
         }
@@ -72,6 +76,7 @@ app.Run(async (HttpContext context) =>
                     var result = TodoRepository.DeleteTodo(todoId);
                     if (result)
                     {
+                        context.Response.StatusCode = 202;
                         await context.Response.WriteAsync($"you removed ${todoId}");
                     }
                     else
@@ -84,7 +89,6 @@ app.Run(async (HttpContext context) =>
         }
     }
 });
-
 
 app.Run();
 
@@ -99,7 +103,7 @@ static class TodoRepository
     // Create Todo
     public static void CreateTodo(Todo? todo)
     {
-        if(todo is not null)
+        if (todo is not null)
         {
             todos.Add(todo);
         }
@@ -113,14 +117,15 @@ static class TodoRepository
 
         td = todos.FirstOrDefault(t => t.Id == todo.Id);
 
-        if(td is not null)
+        if (td is not null)
         {
             td.Title = todo.Title;
             td.Description = todo.Description;
             td.CurrentDateTime = DateTime.Now;
 
             result = true;
-        }else
+        }
+        else
         {
             result = false;
         }
@@ -131,15 +136,16 @@ static class TodoRepository
     public static bool DeleteTodo(int id)
     {
         bool result;
-        var todo = todos.FirstOrDefault(x=> x.Id == id);
+        var todo = todos.FirstOrDefault(x => x.Id == id);
 
-        if(todo is not null)
+        if (todo is not null)
         {
             todos.Remove(todo);
             result = true;
-        }else
+        }
+        else
         {
-            result= false;
+            result = false;
         }
         return result;
     }
