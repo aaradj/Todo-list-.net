@@ -1,6 +1,8 @@
+using System.Security.Cryptography;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
+
 var app = builder.Build();
 
 app.Run(async (HttpContext context) =>
@@ -11,20 +13,34 @@ app.Run(async (HttpContext context) =>
     {
         if (context.Request.Method == "GET")
         {
-            var todos = TodoRepository.GetTodo();
-            if (todos is null || todos.Count == 0)
+            if (context.Request.Query.ContainsKey("id")) 
             {
-                await context.Response.WriteAsync("there is no todo!");
-            }
-            else
-            {
-                foreach (var todo in todos)
+                var id = context.Request.Query["id"];
+                if (int.TryParse(id, out int todoId)) 
                 {
-                    await context.Response.WriteAsync($"Id: {todo.Id}\n");
-                    await context.Response.WriteAsync($"Title: {todo.Title}\n");
-                    await context.Response.WriteAsync($"Edited: {todo.isEdited}\n");
-                    await context.Response.WriteAsync($"created at: {todo.CurrentDateTime}\n");
-                    await context.Response.WriteAsync($"--------------------\n");
+                    var todo = TodoRepository.GetTodo().FirstOrDefault(td => td.Id == todoId);
+                    await context.Response.WriteAsync($"{todo.Id}: {todo.Title}\n");
+                    await context.Response.WriteAsync($"{todo.Description}\n");
+                    await context.Response.WriteAsync($"is Edited: ${todo.isEdited}");
+                    await context.Response.WriteAsync($"Current DateTime:{todo.CurrentDateTime}");
+                }
+            } else
+            {
+                var todos = TodoRepository.GetTodo();
+                if (todos is null || todos.Count == 0)
+                {
+                    await context.Response.WriteAsync("there is no todo!");
+                }
+                else
+                {
+                    foreach (var todo in todos)
+                    {
+                        await context.Response.WriteAsync($"Id: {todo.Id}\n");
+                        await context.Response.WriteAsync($"Title: {todo.Title}\n");
+                        await context.Response.WriteAsync($"Edited: {todo.isEdited}\n");
+                        await context.Response.WriteAsync($"created at: {todo.CurrentDateTime}\n");
+                        await context.Response.WriteAsync($"--------------------\n");
+                    }
                 }
             }
         }
@@ -178,7 +194,7 @@ static class TodoRepository
 }
 
 
-// Todo List Instance
+// Todo List Instance   
 public class Todo
 {
 
