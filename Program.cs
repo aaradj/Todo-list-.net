@@ -22,7 +22,7 @@ app.Run(async (HttpContext context) =>
                 {
                     await context.Response.WriteAsync($"Id: {todo.Id}\n");
                     await context.Response.WriteAsync($"Title: {todo.Title}\n");
-                    await context.Response.WriteAsync($"Edited: {todo.isEdited}");
+                    await context.Response.WriteAsync($"Edited: {todo.isEdited}\n");
                     await context.Response.WriteAsync($"created at: {todo.CurrentDateTime}\n");
                     await context.Response.WriteAsync($"--------------------\n");
                 }
@@ -90,18 +90,23 @@ app.Run(async (HttpContext context) =>
             {
                 var id = context.Request.Query["id"];
 
-                if (int.TryParse(id, out int todoId))
+                if (context.Request.Headers["Authorization"] == "auth")
                 {
-                    var result = TodoRepository.DeleteTodo(todoId);
-                    if (result)
+                    if (TodoRepository.DeleteTodo(int.Parse(id)))
                     {
                         context.Response.StatusCode = 202;
-                        await context.Response.WriteAsync($"you removed ${todoId}");
+                        await context.Response.WriteAsync("todo deleted successfuly!");
                     }
                     else
                     {
-                        await context.Response.WriteAsync("id is not found");
+                        context.Response.StatusCode = 400;
+                        await context.Response.WriteAsync("todo is not found!");
                     }
+                }
+                else
+                {
+                    context.Response.StatusCode = 401;
+                    await context.Response.WriteAsync("you are not authorized to delete this todo!");
                 }
 
             }
@@ -140,6 +145,7 @@ static class TodoRepository
         {
             td.Title = todo.Title;
             td.Description = todo.Description;
+            td.isEdited = true;
             td.CurrentDateTime = DateTime.Now;
 
             result = true;
