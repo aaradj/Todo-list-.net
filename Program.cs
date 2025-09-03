@@ -32,36 +32,55 @@ app.Run(async (HttpContext context) =>
         {
             var body = await reader.ReadToEndAsync();
 
-            var todo = JsonSerializer.Deserialize<Todo>(body);
+            try
+            {
+                var todo = JsonSerializer.Deserialize<Todo>(body);
 
-            if (todo is not null)
-            {
-                TodoRepository.CreateTodo(todo);
-                context.Response.StatusCode = 201;
-                await context.Response.WriteAsync("todo created successfuly!");
+                if (todo is not null)
+                {
+                    TodoRepository.CreateTodo(todo);
+                    context.Response.StatusCode = 201;
+                    await context.Response.WriteAsync("todo created successfuly!");
+                }
+                else
+                {
+                    context.Response.StatusCode = 400;
+                    await context.Response.WriteAsync("please field the input currectly!");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                context.Response.StatusCode = 505;
-                await context.Response.WriteAsync("please field the input currectly!");
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsync(ex.Message);
             }
+
         }
         else if (context.Request.Method == "PUT")
         {
             var body = await reader.ReadToEndAsync();
-            var todo = JsonSerializer.Deserialize<Todo>(body);
 
-            if (todo is not null)
+            try
             {
-                TodoRepository.EditTodo(todo);
-                context.Response.StatusCode = 202;
-                await context.Response.WriteAsync("todo edited successfuly!");
+                var todo = JsonSerializer.Deserialize<Todo>(body);
+
+                if (todo is not null)
+                {
+                    TodoRepository.EditTodo(todo);
+                    context.Response.StatusCode = 202;
+                    await context.Response.WriteAsync("todo edited successfuly!");
+                }
+                else
+                {
+                    context.Response.StatusCode = 400;
+                    await context.Response.WriteAsync("todo is not found!");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                context.Response.StatusCode = 505;
-                await context.Response.WriteAsync("todo is not found!");
+                context.Response.StatusCode = 400;
+                await context.Response.WriteAsync(ex.Message);
             }
+
         }
         else if (context.Request.Method == "DELETE")
         {
